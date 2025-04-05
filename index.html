@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Certificados | Institución Educativa</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Estilos para la línea del sello */
+        .seal-line {
+            width: 200px;
+            height: 1px;
+            background-color: var(--dark-color);
+            margin: 0 auto 0.5rem;
+            position: relative;
+        }
+        
+        .seal-line:after {
+            content: "";
+            position: absolute;
+            top: -5px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            border-top: 1px solid var(--dark-color);
+            border-bottom: 1px solid var(--dark-color);
+        }
+        
+        .seal-image-container {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .seal-image-container img {
+            max-height: 100%;
+            max-width: 200px;
+            object-fit: contain;
+        }
+        
+        .seal-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo-container">
+                <i class="fas fa-certificate logo-icon"></i>
+                <h1 class="logo-text">Cert<span>y</span>f<span>y</span>cados.<span>EDU</span></h1>
+            </div>
+            <p class="app-description">Sistema de generación de certificados estudiantiles</p>
+        </header>
+
+        <main class="main-content">
+            <section class="form-section glassmorphism">
+                <h2 class="section-title"><i class="fas fa-user-edit"></i> Datos del Estudiante</h2>
+                
+                <br> <!-- esta etiqueta añade un espacio entre el título y el formulario-->
+
+<form id="certificateForm" class="modern-form" style="padding: 1rem;">
+    <!-- Campos del formulario -->
+    <div class="form-group floating-label">
+        <input type="text" id="studentName" required placeholder=" ">
+        <label for="studentName">Nombre Completo</label>
+        <i class="fas fa-user form-icon"></i>
+    </div>
+    
+    <div class="form-group floating-label">
+        <input type="text" id="documentNumber" required placeholder=" ">
+        <label for="documentNumber">Documento</label>
+        <i class="fas fa-id-card form-icon"></i>
+    </div>
+    
+
+    
+    <!-- Campo para firma -->
+    <div class="form-group">
+        <label for="signatureImage" class="file-upload-label">
+            <i class="fas fa-signature"></i> Subir Firma
+            <input type="file" id="signatureImage" accept="image/*" style="display:none">
+        </label>
+        <div id="signaturePreview" class="signature-preview"></div>
+    </div>
+    
+    <!-- Nuevo campo para sello institucional -->
+    <div class="form-group">
+        <label for="institutionalSeal" class="file-upload-label">
+            <i class="fas fa-stamp"></i> Sello Institucional
+            <input type="file" id="institutionalSeal" accept="image/*" style="display:none">
+        </label>
+        <div id="sealPreview" class="signature-preview"></div>
+    </div>
+    
+    <!-- Botón generar -->
+    <button type="button" id="generateBtn" class="modern-button">
+        <i class="fas fa-file-pdf"></i> Generar Certificado
+    </button>
+</form>
+            </section>
+
+            <section class="preview-section">
+                <h2 class="section-title"><i class="fas fa-eye"></i></h2>
+                <div class="certificate-container">
+                    <div id="certificate" class="modern-certificate">
+                        <!-- Encabezado -->
+                        <div class="certificate-watermark"></div>
+                        <div class="certificate-border"></div>
+                        
+                        <div class="certificate-header">
+                            <div class="header-logo">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <h3>INSTITUCIÓN Tecnologíca <span>CESDE</span></h3>
+                            <p>Resolución 27665 de 2022 - Ministerio de Educación Nacional</p>
+                        </div>
+                        
+                        <div class="certificate-body">
+                            <h4>CERTIFICADO ACADÉMICO</h4>
+                            <p class="certificate-text">La Institución Tecnologíca CESDE certifica que:</p>
+                            <p class="student-name" id="previewName">NOMBRE DEL ESTUDIANTE</p>
+                            <p class="certificate-text">identificado(a) con número de documento.</p>
+                            <p class="document-number" id="previewDocument">NÚMERO DE DOCUMENTO</p>
+                            <p class="certificate-text">ha cumplido satisfactoriamente con todos los requisitos
+                                 académicos del programa:</p>
+                            <p><h4>Desarrollo de Software</h4></p>
+                            <p class="certificate-date">Fecha de emisión: <span id="currentDate"></span></p>
+                        </div>
+                        
+                        <div class="certificate-footer">
+                            <div class="signature-block">
+                                <div class="signature-line">
+                                    <div class="signature-image-container"></div>
+                                </div>
+                                <p class="signature-name" id="previewSignature" style="display: none;">[FIRMA]</p>
+                                <p class="signature-title">Rector(a)</p>
+                            </div>
+                            <div class="seal-block">
+                                <div class="seal-line">
+                                    <div class="seal-image-container"></div>
+                                </div>
+                                <p class="seal-title">Sello Institucional</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>© <span id="currentYear"></span> Sistema de Certificados Educativos - Todos los derechos reservados</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Mostrar año actual en el footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        // Manejar la carga del sello institucional
+        document.getElementById('institutionalSeal').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.match('image.*')) {
+                alert('Por favor seleccione un archivo de imagen (JPEG, PNG)');
+                return;
+            }
+
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const sealPreview = document.getElementById('sealPreview');
+                sealPreview.innerHTML = `
+                    <img src="${event.target.result}" alt="Sello cargado" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    <button class="remove-signature" onclick="removeSeal()" title="Eliminar sello">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                // Actualizar sello en el certificado
+                updateSealInCertificate(event.target.result);
+            };
+            
+            reader.readAsDataURL(file);
+        });
+        
+        function removeSeal() {
+            document.getElementById('sealPreview').innerHTML = '';
+            document.getElementById('institutionalSeal').value = '';
+            document.querySelector('.seal-image-container').innerHTML = '';
+        }
+        
+        function updateSealInCertificate(imageUrl) {
+            const sealContainer = document.querySelector('.seal-image-container');
+            sealContainer.innerHTML = `<img src="${imageUrl}" alt="Sello institucional" style="max-height: 50px; max-width: 200px; object-fit: contain;">`;
+        }
+    </script>
+</body>
+</html>
